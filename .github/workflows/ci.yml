@@ -6,7 +6,10 @@ on:
   pull_request:
     branches: [master]
   schedule:
-    - cron: '0 9 * * *'  # 每日9点运行
+    - cron: '0 9 * * *'  # 每日9点运行性能测试
+
+env:
+  NODE_VERSION: '18'
 
 jobs:
   test:
@@ -18,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ env.NODE_VERSION }}
           
       - name: Install dependencies
         run: |
@@ -29,23 +32,55 @@ jobs:
           
       - name: Run unit tests
         run: node tests/unit.test.js
+        name: Unit Tests
         
       - name: Run security tests
         run: node tests/security.test.js
+        name: Security Tests
         
       - name: Run integration tests
         run: node tests/full-integration.test.js
+        name: Integration Tests
         
-      - name: Run benchmark
-        run: node benchmark.js
-        id: benchmark
-        
-      - name: Display benchmark results
+  performance:
+    runs-on: windows-latest
+    needs: test
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install dependencies
         run: |
-          echo "## Performance Benchmark Results" >> $GITHUB_STEP_SUMMARY
-          echo "```" >> $GITHUB_STEP_SUMMARY
-          node benchmark.js 2>&1 | Select-String -Pattern "总耗时|平均耗时|性能评级" >> $GITHUB_STEP_SUMMARY
-          echo "```" >> $GITHUB_STEP_SUMMARY
+          cd integrator
+          npm install
+          
+      - name: Run performance benchmark
+        run: |
+          $output = node benchmark.js 2>&1
+          echo "$output"
+          Write-Output "## Performance Benchmark Results" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "```" >> $env:GITHUB_STEP_SUMMARY
+          echo "$output" | Select-String -Pattern "约束检查|相似度计算|收敛检测|平均耗时|性能评级" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "```" >> $env:GITHUB_STEP_SUMMARY
+        name: Performance Benchmark
+        id: benchmark
+
+      - name: Store benchmark results
+        if: github.event_name == 'schedule'
+        run: |
+          $results = @{
+            timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            sha = $env:GITHUB_SHA
+            run_id = $env:GITHUB_RUN_ID
+          } | ConvertTo-Json
+          Write-Output $results
+          # 可以在这里添加存储到 GitHub Secrets 或外部服务
 
   docker:
     runs-on: ubuntu-latest
@@ -64,19 +99,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,prefix=,suffix=,format= sha-{{ sha }}
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,event=schedule
+            type=raw,value=latest,enable={{is_default_branch}}
+          
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}/latest:latest
-            ghcr.io/${{ github.repository }}/${{ github.sha }}:${{ github.run_number }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   npm-publish:
     runs-on: ubuntu-latest
     needs: test
-    if: github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     
     steps:
       - uses: actions/checkout@v4
@@ -84,13 +131,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
+          scope: '@ai-agent-guard'
           
+      - name: Get package version
+        id: version
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          Write-Output "::set-output name=version::$version"
+        shell: pwsh
+        
       - name: Package
         run: npm pack
-      
+        
       - name: Publish to npm
-        run: npm publish
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -78,6 +78,9 @@
       animation: pulse 2s infinite;
     }
     
+    .status-dot.warning { background: var(--status-orange); box-shadow: 0 0 8px var(--status-orange); }
+    .status-dot.error { background: var(--status-red); box-shadow: 0 0 8px var(--status-red); }
+    
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
@@ -85,7 +88,7 @@
     
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 20px;
     }
     
@@ -109,6 +112,9 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     .metric {
@@ -121,10 +127,7 @@
     
     .metric:last-child { border-bottom: none; }
     
-    .metric-label {
-      color: var(--text-secondary);
-      font-size: 14px;
-    }
+    .metric-label { color: var(--text-secondary); font-size: 14px; }
     
     .metric-value {
       font-family: var(--font-mono);
@@ -153,19 +156,19 @@
     }
     
     .chart-container {
-      height: 150px;
+      height: 120px;
       display: flex;
       align-items: flex-end;
-      gap: 4px;
+      gap: 3px;
       padding-top: 20px;
     }
     
     .chart-bar {
       flex: 1;
-      background: var(--neon-cyan);
+      background: linear-gradient(to top, var(--neon-cyan), var(--neon-cyan-dim));
       border-radius: 2px 2px 0 0;
       min-height: 4px;
-      transition: height 0.3s ease;
+      transition: height 0.3s ease, background 0.3s ease;
     }
     
     .chart-bar:hover {
@@ -173,7 +176,7 @@
     }
     
     .log-list {
-      max-height: 300px;
+      max-height: 280px;
       overflow-y: auto;
     }
     
@@ -186,10 +189,7 @@
       font-size: 12px;
     }
     
-    .log-time {
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
+    .log-time { color: var(--text-muted); white-space: nowrap; }
     
     .log-level {
       font-weight: 600;
@@ -202,10 +202,7 @@
     .log-level.error { color: var(--status-red); }
     .log-level.critical { color: var(--status-yellow); }
     
-    .log-message {
-      color: var(--text-primary);
-      word-break: break-all;
-    }
+    .log-message { color: var(--text-primary); word-break: break-all; }
     
     .alert-item {
       padding: 12px;
@@ -215,21 +212,12 @@
       border-left: 3px solid var(--status-red);
     }
     
-    .alert-item.warning {
-      border-left-color: var(--status-orange);
-    }
+    .alert-item.warning { border-left-color: var(--status-orange); }
     
-    .alert-time {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
+    .alert-time { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .alert-message { font-size: 13px; }
     
-    .alert-message {
-      font-size: 13px;
-    }
-    
-    .refresh-btn {
+    .btn {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       color: var(--text-primary);
@@ -240,21 +228,34 @@
       transition: all 0.2s;
     }
     
-    .refresh-btn:hover {
+    .btn:hover {
       border-color: var(--neon-cyan);
       box-shadow: 0 0 10px var(--neon-cyan-glow);
     }
     
     .full-width { grid-column: 1 / -1; }
     
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+    .redis-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-radius: 6px;
+      font-size: 12px;
     }
     
+    .redis-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--status-green);
+    }
+    
+    .redis-dot.offline { background: var(--status-red); }
+    
     @media (max-width: 768px) {
-      .two-col { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -262,11 +263,15 @@
   <div class="header">
     <h1>🛡️ AI Agent Guard - 实时监控</h1>
     <div style="display: flex; gap: 12px; align-items: center;">
-      <div class="status-badge">
-        <div class="status-dot"></div>
-        <span>系统运行中</span>
+      <div class="redis-status">
+        <div class="redis-dot" id="redisDot"></div>
+        <span id="redisStatus">Memory</span>
       </div>
-      <button class="refresh-btn" onclick="refreshData()">🔄 刷新</button>
+      <div class="status-badge">
+        <div class="status-dot" id="systemDot"></div>
+        <span id="systemStatus">系统就绪</span>
+      </div>
+      <button class="btn" onclick="refreshData()">🔄 刷新</button>
     </div>
   </div>
   
@@ -280,19 +285,19 @@
       </div>
       <div class="metric">
         <span class="metric-label">约束引擎</span>
-        <span class="metric-value success">正常</span>
+        <span class="metric-value success" id="constraintStatus">正常</span>
       </div>
       <div class="metric">
         <span class="metric-label">收敛检测</span>
-        <span class="metric-value success">监控中</span>
+        <span class="metric-value success" id="convergenceStatus">监控中</span>
       </div>
       <div class="metric">
         <span class="metric-label">记忆模块</span>
-        <span class="metric-value success">就绪</span>
+        <span class="metric-value success" id="memoryStatus">就绪</span>
       </div>
       <div class="metric">
-        <span class="metric-label">日志模块</span>
-        <span class="metric-value success">记录中</span>
+        <span class="metric-label">插件系统</span>
+        <span class="metric-value" id="pluginStatus">未加载</span>
       </div>
     </div>
     
@@ -348,7 +353,6 @@
     <div class="card">
       <div class="card-title">📉 评分分布</div>
       <div class="chart-container" id="scoreChart">
-        <!-- 动态生成 -->
       </div>
       <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 11px; color: var(--text-muted);">
         <span>0-20</span><span>20-40</span><span>40-60</span><span>60-80</span><span>80-100</span>
@@ -357,115 +361,203 @@
     
     <!-- 告警 -->
     <div class="card">
-      <div class="card-title">🚨 实时告警</div>
-      <div class="alert-item warning">
-        <div class="alert-time">16:45:23</div>
-        <div class="alert-message">收敛检测连续触发3次</div>
+      <div class="card-title">🚨 实时告警 <span id="alertCount">(0)</span></div>
+      <div id="alertList">
+        <div class="alert-item warning">
+          <div class="alert-time">暂无告警</div>
+          <div class="alert-message">系统运行正常</div>
+        </div>
       </div>
-      <div class="alert-item">
-        <div class="alert-time">16:30:12</div>
-        <div class="alert-message">评估分数低于阈值: 58</div>
+    </div>
+    
+    <!-- Redis状态 -->
+    <div class="card">
+      <div class="card-title">🗄️ 存储状态</div>
+      <div class="metric">
+        <span class="metric-label">存储后端</span>
+        <span class="metric-value" id="storageBackend">Memory</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">连接状态</span>
+        <span class="metric-value success" id="storageStatus">Connected</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">键数量</span>
+        <span class="metric-value" id="keyCount">0</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">内存占用</span>
+        <span class="metric-value" id="memoryUsage">0 KB</span>
       </div>
     </div>
     
     <!-- 实时日志 -->
     <div class="card full-width">
       <div class="card-title">📋 实时日志</div>
-      <div class="log-list" id="logList">
-        <div class="log-item">
-          <span class="log-time">17:18:00</span>
-          <span class="log-level info">INFO</span>
-          <span class="log-message">系统启动完成，所有模块加载成功</span>
-        </div>
-        <div class="log-item">
-          <span class="log-time">17:18:05</span>
-          <span class="log-level debug">DEBUG</span>
-          <span class="log-message">评估引擎初始化，使用模式: local</span>
-        </div>
-        <div class="log-item">
-          <span class="log-time">17:18:10</span>
-          <span class="log-level warn">WARN</span>
-          <span class="log-message">配置面板已打开，当前语言: zh</span>
-        </div>
-      </div>
+      <div class="log-list" id="logList"></div>
     </div>
   </div>
   
   <script>
-    // 模拟实时数据更新
+    // 统计数据
     let stats = {
-      evalCount: 127,
-      passCount: 108,
-      blockCount: 19,
-      convCount: 7
+      evalCount: 0,
+      passCount: 0,
+      blockCount: 0,
+      convCount: 0,
+      simCalls: 0,
+      avgResponse: 0,
+      startTime: Date.now(),
+      alerts: []
     };
     
     const logMessages = [
-      { level: 'info', msg: '评估请求处理完成，分数: 85' },
-      { level: 'debug', msg: '相似度计算: 92.5%' },
-      { level: 'info', msg: '约束检查通过' },
+      { level: 'info', msg: '系统启动完成' },
+      { level: 'debug', msg: '配置加载: general v2.0' },
+      { level: 'info', msg: '相似度计算: 92.5%' },
       { level: 'warn', msg: '收敛检测: 分数波动 2.3%' },
-      { level: 'info', msg: '记忆保存成功' },
-      { level: 'debug', msg: '规则加载: general v2.0' }
+      { level: 'info', msg: '约束检查通过' },
+      { level: 'debug', msg: '评估分数: 85' },
+      { level: 'info', msg: '记忆保存成功' }
     ];
+    
+    function addLog(level, message) {
+      const logList = document.getElementById('logList');
+      const now = new Date();
+      const time = now.toTimeString().slice(0, 8);
+      
+      const entry = document.createElement('div');
+      entry.className = 'log-item';
+      entry.innerHTML = `
+        <span class="log-time">${time}</span>
+        <span class="log-level ${level}">${level.toUpperCase()}</span>
+        <span class="log-message">${message}</span>
+      `;
+      
+      logList.insertBefore(entry, logList.firstChild);
+      
+      while (logList.children.length > 100) {
+        logList.removeChild(logList.lastChild);
+      }
+    }
+    
+    function addAlert(message, type = 'info') {
+      const alertList = document.getElementById('alertList');
+      const now = new Date();
+      const time = now.toTimeString().slice(0, 8);
+      
+      stats.alerts.unshift({ time, message, type });
+      if (stats.alerts.length > 10) stats.alerts.pop();
+      
+      document.getElementById('alertCount').textContent = `(${stats.alerts.length})`;
+      
+      if (stats.alerts.length === 1) {
+        alertList.innerHTML = '';
+      }
+      
+      const entry = document.createElement('div');
+      entry.className = `alert-item ${type === 'warning' ? 'warning' : ''}`;
+      entry.innerHTML = `
+        <div class="alert-time">${time}</div>
+        <div class="alert-message">${message}</div>
+      `;
+      
+      alertList.insertBefore(entry, alertList.firstChild);
+      
+      while (alertList.children.length > 10) {
+        alertList.removeChild(alertList.lastChild);
+      }
+    }
     
     function updateStats() {
       document.getElementById('evalCount').textContent = stats.evalCount;
       document.getElementById('passCount').textContent = stats.passCount;
       document.getElementById('blockCount').textContent = stats.blockCount;
       document.getElementById('convCount').textContent = stats.convCount;
+      document.getElementById('simCalls').textContent = stats.simCalls;
       
       const passRate = stats.evalCount > 0 ? ((stats.passCount / stats.evalCount) * 100).toFixed(1) : 0;
       document.getElementById('passRate').textContent = passRate + '%';
       document.getElementById('passRateBar').style.width = passRate + '%';
       
-      // 随机更新性能指标
-      document.getElementById('avgResponse').textContent = (Math.random() * 100 + 50).toFixed(0) + 'ms';
-      document.getElementById('simCalls').textContent = Math.floor(Math.random() * 1000 + 500);
+      // 更新响应时间
+      document.getElementById('avgResponse').textContent = stats.avgResponse.toFixed(0) + 'ms';
       
-      // 更新评分分布图表
+      // 更新内存
+      if (performance.memory) {
+        const used = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(1);
+        document.getElementById('memory').textContent = used + ' MB';
+      }
+      
+      // 更新在线时长
+      const uptime = Date.now() - stats.startTime;
+      const hours = Math.floor(uptime / 3600000);
+      const minutes = Math.floor((uptime % 3600000) / 60000);
+      document.getElementById('uptime').textContent = `${hours}h ${minutes}m`;
+      
+      // 更新评分分布
       updateScoreChart();
     }
     
     function updateScoreChart() {
       const chart = document.getElementById('scoreChart');
-      const heights = [20, 35, 50, 80, 95, 70, 45, 30, 15, 25].map(h => Math.random() * 60 + 20);
+      const heights = Array.from({ length: 10 }, () => Math.random() * 60 + 20);
       chart.innerHTML = heights.map(h => `<div class="chart-bar" style="height: ${h}%"></div>`).join('');
     }
     
-    function addLogEntry() {
-      const logList = document.getElementById('logList');
-      const now = new Date();
-      const time = now.toTimeString().slice(0, 8);
-      const log = logMessages[Math.floor(Math.random() * logMessages.length)];
-      
-      const entry = document.createElement('div');
-      entry.className = 'log-item';
-      entry.innerHTML = `
-        <span class="log-time">${time}</span>
-        <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
-        <span class="log-message">${log.msg}</span>
-      `;
-      
-      logList.insertBefore(entry, logList.firstChild);
-      
-      // 保持最多50条
-      while (logList.children.length > 50) {
-        logList.removeChild(logList.lastChild);
+    async function fetchStatus() {
+      try {
+        const res = await fetch('http://localhost:18791/status');
+        if (res.ok) {
+          const data = await res.json();
+          
+          if (data.data?.memory) {
+            document.getElementById('memoryStatus').textContent = '正常';
+            document.getElementById('memoryStatus').className = 'metric-value success';
+          }
+          
+          addLog('info', '状态同步成功');
+        }
+      } catch (e) {
+        document.getElementById('systemStatus').textContent = '离线';
+        document.getElementById('systemDot').className = 'status-dot warning';
       }
     }
     
     function refreshData() {
+      // 模拟数据更新
       stats.evalCount += Math.floor(Math.random() * 5 + 1);
       stats.passCount += Math.floor(Math.random() * 4 + 1);
       stats.blockCount += Math.floor(Math.random() * 2);
+      if (Math.random() > 0.9) stats.convCount++;
+      stats.simCalls += Math.floor(Math.random() * 10 + 5);
+      stats.avgResponse = Math.random() * 50 + 10;
+      
       updateStats();
-      addLogEntry();
+      addLog('debug', `刷新: 评估+${stats.evalCount}`);
+      
+      // 随机告警
+      if (Math.random() > 0.95) {
+        addAlert('评估分数偏低: ' + (Math.random() * 20 + 60).toFixed(0), 'warning');
+      }
     }
     
     // 初始化
+    updateScoreChart();
     updateStats();
-    setInterval(refreshData, 3000);
+    fetchStatus();
+    
+    // 定时更新
+    setInterval(() => {
+      refreshData();
+      addLog('debug', '定时同步');
+    }, 3000);
+    
+    // 每10秒添加一条日志
+    setInterval(() => {
+      const log = logMessages[Math.floor(Math.random() * logMessages.length)];
+      addLog(log.level, log.msg);
+    }, 10000);
   </script>
 </body>
 </html>

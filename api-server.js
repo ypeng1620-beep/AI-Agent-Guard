@@ -278,6 +278,42 @@ const routes = {
     } catch (e) {
       jsonResponse(res, 500, { error: e.message });
     }
+  },
+
+  // Prometheus 指标 (公开端点)
+  'GET /metrics': async (req, res) => {
+    try {
+      const memUsage = process.memoryUsage();
+      const uptime = process.uptime();
+      
+      // Prometheus 格式指标
+      const metrics = `# HELP agent_guard_uptime_seconds Server uptime in seconds
+# TYPE agent_guard_uptime_seconds gauge
+agent_guard_uptime_seconds ${uptime}
+
+# HELP agent_guard_memory_heap_used_bytes Memory heap used in bytes
+# TYPE agent_guard_memory_heap_used_bytes gauge
+agent_guard_memory_heap_used_bytes ${memUsage.heapUsed}
+
+# HELP agent_guard_memory_heap_total_bytes Memory heap total in bytes
+# TYPE agent_guard_memory_heap_total_bytes gauge
+agent_guard_memory_heap_total_bytes ${memUsage.heapTotal}
+
+# HELP agent_guard_memory_rss_bytes Memory RSS in bytes
+# TYPE agent_guard_memory_rss_bytes gauge
+agent_guard_memory_rss_bytes ${memUsage.rss}
+
+# HELP agent_guard_info Server info
+# TYPE agent_guard_info gauge
+agent_guard_info{version="2.4.0"} 1
+`;
+      
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end(metrics);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end(`error: ${e.message}`);
+    }
   }
 };
 
