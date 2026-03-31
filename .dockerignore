@@ -1,0 +1,38 @@
+# 依赖
+node_modules
+npm-debug.log
+
+# 测试
+tests
+*.test.js
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 临时
+tmp
+temp
+*.log
+
+# 文档
+*.md
+!README.md
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 开发文件
+.env
+.env.local

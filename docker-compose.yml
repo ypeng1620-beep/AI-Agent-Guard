@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  agent-guard:
+    build: .
+    container_name: ai-agent-guard
+    ports:
+      - "18791:18791"
+    environment:
+      - NODE_ENV=production
+      - PORT=18791
+      - HOST=0.0.0.0
+      - EVAL_MODEL=local
+      - DEFAULT_SCENARIO=general
+      - LOG_LEVEL=info
+    volumes:
+      # 持久化记忆数据
+      - ./data/memory:/app/subprojects/07-memory-module/test_storage
+      # 持久化日志
+      - ./data/logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:18791/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # 可选: 带监控面板的完整版本
+  agent-guard-full:
+    build: .
+    container_name: ai-agent-guard-full
+    ports:
+      - "18791:18791"  # API
+      - "18792:18792"  # 监控面板 (预留)
+    environment:
+      - NODE_ENV=production
+      - PORT=18791
+      - HOST=0.0.0.0
+      - EVAL_MODEL=local
+      - DEFAULT_SCENARIO=general
+      - API_KEY=${API_KEY:-}
+    volumes:
+      - ./data/memory:/app/subprojects/07-memory-module/test_storage
+      - ./data/logs:/app/logs
+    restart: unless-stopped
+
+networks:
+  default:
+    name: agent-guard-network
