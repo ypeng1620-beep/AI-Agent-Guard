@@ -1,0 +1,386 @@
+# AI-Agent-Guard API Specification
+openapi: 3.0.0
+info:
+  title: AI Agent Guard API
+  description: AI Agent 安全防护REST API
+  version: 2.2.0
+  contact:
+    name: ypeng1620
+
+servers:
+  - url: http://localhost:18791
+    description: 本地开发服务器
+
+paths:
+  /health:
+    get:
+      summary: 健康检查
+      tags: [System]
+      responses:
+        '200':
+          description: 系统正常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /evaluate:
+    post:
+      summary: 评估输出
+      tags: [Core]
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluateRequest'
+      responses:
+        '200':
+          description: 评估成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /check:
+    post:
+      summary: 约束检查
+      tags: [Core]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckRequest'
+      responses:
+        '200':
+          description: 检查成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckResponse'
+
+  /convergence:
+    post:
+      summary: 收敛检测
+      tags: [Core]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvergenceRequest'
+      responses:
+        '200':
+          description: 检测成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvergenceResponse'
+
+  /similarity:
+    post:
+      summary: 相似度计算
+      tags: [Tools]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimilarityRequest'
+      responses:
+        '200':
+          description: 计算成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimilarityResponse'
+
+  /memory:
+    post:
+      summary: 保存记忆
+      tags: [Memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemoryRequest'
+      responses:
+        '200':
+          description: 保存成功
+
+  /memory/{taskId}:
+    get:
+      summary: 获取最佳实践
+      tags: [Memory]
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: scenario
+          in: query
+          schema:
+            type: string
+            default: general
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+
+  /config:
+    get:
+      summary: 获取配置
+      tags: [System]
+      responses:
+        '200':
+          description: 获取成功
+    put:
+      summary: 更新配置
+      tags: [System]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigUpdate'
+      responses:
+        '200':
+          description: 更新成功
+
+  /rules/reload:
+    post:
+      summary: 热更新规则
+      tags: [System]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scenario:
+                  type: string
+                  default: general
+      responses:
+        '200':
+          description: 更新成功
+
+  /status:
+    get:
+      summary: 系统状态
+      tags: [System]
+      responses:
+        '200':
+          description: 获取成功
+
+  /api-key:
+    post:
+      summary: API密钥管理
+      tags: [Security]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [generate, validate]
+                apiKey:
+                  type: string
+      responses:
+        '200':
+          description: 操作成功
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: number
+        modules:
+          type: object
+
+    EvaluateRequest:
+      type: object
+      required:
+        - output
+      properties:
+        output:
+          type: string
+          maxLength: 100000
+          description: 待评估的AI输出
+        task:
+          type: string
+          maxLength: 5000
+          description: 任务描述
+
+    EvaluateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            score:
+              type: number
+            quality:
+              type: number
+            compliance:
+              type: number
+            safety:
+              type: number
+
+    CheckRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          maxLength: 100000
+
+    CheckResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            passed:
+              type: boolean
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+
+    ConvergenceRequest:
+      type: object
+      required:
+        - score
+      properties:
+        score:
+          type: number
+        text:
+          type: string
+
+    ConvergenceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            converged:
+              type: boolean
+            reason:
+              type: string
+
+    SimilarityRequest:
+      type: object
+      required:
+        - text1
+        - text2
+      properties:
+        text1:
+          type: string
+          maxLength: 5000
+        text2:
+          type: string
+          maxLength: 5000
+
+    SimilarityResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            similarity:
+              type: number
+            percentage:
+              type: string
+
+    MemoryRequest:
+      type: object
+      required:
+        - taskId
+      properties:
+        taskId:
+          type: string
+        data:
+          type: object
+        scenario:
+          type: string
+
+    ConfigUpdate:
+      type: object
+      properties:
+        evalModel:
+          type: string
+          enum: [local, doubao, zhipu, kimi]
+        defaultScenario:
+          type: string
+          enum: [general, tts, code]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    TooManyRequests:
+      description: 请求过于频繁
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              retryAfter:
+                type: integer

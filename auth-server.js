@@ -271,9 +271,17 @@ function parseBody(req) {
 
 function sanitizeInput(input, maxLength = 100000) {
   if (typeof input !== 'string') return '';
+  
   return input
     .slice(0, maxLength)
-    .replace(/[<>]/g, '')
+    // 移除null字节和其他控制字符
+    .replace(/[\x00-\x1F\x7F]/g, '')
+    // 移除HTML标签（更全面的匹配）
+    .replace(/<[^>]*>/gi, '')
+    // 移除HTML实体编码
+    .replace(/&[#\w]+;/gi, '')
+    // 移除数据URL协议
+    .replace(/data:[^,;]*,/gi, '')
     .trim();
 }
 

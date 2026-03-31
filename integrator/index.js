@@ -245,10 +245,11 @@ class AgentGuardIntegrator {
       violations.push({ type: 'max_length', severity: 'medium' });
     }
     
-    // 违禁词检查
-    if (this.rules.prohibitedWords && this.rules.prohibitedWords.length > 0) {
+    // 违禁词检查 - 支持 forbiddenWords.core 或 prohibitedWords
+    const forbiddenWords = this.rules.forbiddenWords?.core || this.rules.prohibitedWords || [];
+    if (forbiddenWords.length > 0) {
       const lowerOutput = output.toLowerCase();
-      const matches = this.rules.prohibitedWords.filter(w => lowerOutput.includes(w.toLowerCase()));
+      const matches = forbiddenWords.filter(w => lowerOutput.includes(w.toLowerCase()));
       if (matches.length > 0) {
         violations.push({ type: 'prohibited_words', matches, severity: 'critical' });
       }
