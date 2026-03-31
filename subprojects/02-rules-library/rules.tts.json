@@ -1,144 +1,79 @@
 {
-  "version": "1.0",
-  "name": "TTS场景",
-  "description": "适用于语音合成、字幕对齐等TTS专项场景的多维度评分规则",
-  "scene": "tts",
-  "dimensions": {
-    "pronunciation_accuracy": {
-      "name": "发音准确率",
-      "description": "评估语音合成中发音的准确性，包括多音字、轻声、儿化音等",
-      "weight": 0.3,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "所有发音完全正确，多音字处理精准"
-        },
-        {
-          "score": 90,
-          "description": "99%以上发音正确，仅有极少数多音字偏差"
-        },
-        {
-          "score": 80,
-          "description": "95%以上发音正确，轻微偏差不影响理解"
-        },
-        {
-          "score": 70,
-          "description": "90%以上发音正确，存在少量明显错误"
-        },
-        {
-          "score": 50,
-          "description": "85%以上发音正确，有多处发音错误"
-        },
-        {
-          "score": 0,
-          "description": "发音错误率较高，严重影响理解"
-        }
+  "scenario": "tts",
+  "version": "2.0.0",
+  "description": "TTS语音合成场景规则库",
+  "rules": {
+    "forbiddenWords": {
+      "core": [
+        "噪音", "刺耳", "过载", "失真", "爆音"
       ],
-      "threshold": 80
+      "extended": [],
+      "contextual": []
     },
-    "subtitle_sync": {
-      "name": "字幕对齐",
-      "description": "评估字幕与音频的时间同步精度",
-      "weight": 0.25,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "字幕与音频完美同步，误差<50ms"
-        },
-        {
-          "score": 90,
-          "description": "字幕同步误差<100ms，整体流畅"
-        },
-        {
-          "score": 80,
-          "description": "字幕同步误差<200ms，偶尔轻微不同步"
-        },
-        {
-          "score": 70,
-          "description": "字幕同步误差<500ms，部分句子有明显延迟"
-        },
-        {
-          "score": 50,
-          "description": "字幕同步误差>500ms，大量延迟影响观看"
-        },
-        {
-          "score": 0,
-          "description": "字幕与音频完全不对齐"
-        }
-      ],
-      "threshold": 75
+    "length": {
+      "min": 5,
+      "max": 5000,
+      "recommended": 1000,
+      "perMinute": 150
     },
-    "audio_format": {
-      "name": "音频格式合规",
-      "description": "评估音频格式是否符合要求（采样率、位深、声道、编码等）",
-      "weight": 0.15,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "完全符合音频格式要求"
-        },
-        {
-          "score": 85,
-          "description": "格式完全合规，参数接近最优"
-        },
-        {
-          "score": 70,
-          "description": "格式基本合规，有轻微参数偏差"
-        },
-        {
-          "score": 50,
-          "description": "格式有较大偏差，需要转码"
-        },
-        {
-          "score": 0,
-          "description": "格式完全不符合要求，无法使用"
-        }
-      ],
-      "threshold": 70
+    "turns": {
+      "max": 10,
+      "warning": 7
     },
-    "naturalness": {
-      "name": "自然度",
-      "description": "评估合成语音的自然度，包括语调、停顿、情感等",
-      "weight": 0.2,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "非常自然，接近真人发音"
-        },
-        {
-          "score": 85,
-          "description": "自然度较高，仅有轻微机械感"
-        },
-        {
-          "score": 70,
-          "description": "自然度一般，有明显机械感"
-        },
-        {
-          "score": 50,
-          "description": "自然度较差，语调生硬"
-        },
-        {
-          "score": 0,
-          "description": "听起来完全像机器人，毫无自然感"
-        }
-      ],
-      "threshold": 65
+    "quality": {
+      "minScore": 70,
+      "goodScore": 85
     },
-    "compliance": {
-      "name": "内容合规",
-      "description": "评估音频内容是否包含违禁词、敏感词",
-      "weight": 0.1,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "完全合规，无任何违禁词或敏感词"
-        },
-        {
-          "score": 0,
-          "description": "包含违禁词或敏感内容"
-        }
-      ],
-      "threshold": 100
+    "tts": {
+      "maxDuration": 300,
+      "maxSilence": 3,
+      "allowSSML": false,
+      "allowAudio": false,
+      "pitchRange": {
+        "min": 0.5,
+        "max": 2.0
+      },
+      "speedRange": {
+        "min": 0.5,
+        "max": 2.0
+      },
+      "volumeRange": {
+        "min": 0.1,
+        "max": 1.0
+      }
+    },
+    "safety": {
+      "earDamage": {
+        "action": "block",
+        "severity": "critical"
+      },
+      "seizure": {
+        "action": "block",
+        "severity": "high"
+      }
+    },
+    "pronunciation": {
+      "correctness": 0.95,
+      "nativeCheck": true,
+      "phoneticAmbiguity": false
+    }
+  },
+  "presets": {
+    "news": {
+      "maxDuration": 180,
+      "speed": 1.0,
+      "pitch": 1.0
+    },
+    "story": {
+      "maxDuration": 600,
+      "speed": 0.9,
+      "pitch": 1.1
+    },
+    "kids": {
+      "maxDuration": 300,
+      "speed": 0.85,
+      "pitch": 1.2,
+      "safetyLevel": "strict"
     }
   }
 }

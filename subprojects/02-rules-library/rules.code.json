@@ -1,152 +1,98 @@
 {
-  "version": "1.0",
-  "name": "代码场景",
-  "description": "适用于代码生成、代码审查等场景的多维度评分规则",
-  "scene": "code",
-  "dimensions": {
-    "correctness": {
-      "name": "正确性",
-      "description": "评估代码是否正确实现功能，是否能正常运行",
-      "weight": 0.3,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "代码完全正确，功能实现完整，可直接运行"
-        },
-        {
-          "score": 85,
-          "description": "代码基本正确，仅有微小逻辑问题"
-        },
-        {
-          "score": 70,
-          "description": "功能基本实现，存在边界条件问题"
-        },
-        {
-          "score": 50,
-          "description": "存在明显bug，需要较大修改"
-        },
-        {
-          "score": 30,
-          "description": "代码无法运行或功能完全错误"
-        },
-        {
-          "score": 0,
-          "description": "代码完全无法工作"
-        }
+  "scenario": "code",
+  "version": "2.0.0",
+  "description": "代码助手场景规则库",
+  "rules": {
+    "forbiddenWords": {
+      "core": [
+        "eval", "exec", "system", "popen", "subprocess",
+        "__import__", "open(", "file", "os.", "sys.",
+        "spawn", "fork", "ctypes", "socket"
       ],
-      "threshold": 75
+      "extended": [
+        "shell", "bash", "sh", "cmd", "powershell",
+        "rm -rf", "del /", "format", "wipe",
+        "drop table", "delete from", "truncate",
+        "inject", "bypass", "rootkit"
+      ],
+      "contextual": [
+        "password", "secret", "token", "api_key", "credential",
+        "decrypt", "crack", "hack", "exploit"
+      ]
+    },
+    "length": {
+      "min": 5,
+      "max": 50000,
+      "recommended": 5000
+    },
+    "turns": {
+      "max": 100,
+      "warning": 50
+    },
+    "quality": {
+      "minScore": 70,
+      "goodScore": 90
     },
     "security": {
-      "name": "安全性",
-      "description": "评估代码是否存在安全漏洞（注入、XSS、SQL注入等）",
-      "weight": 0.25,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "完全安全，无任何已知漏洞"
-        },
-        {
-          "score": 85,
-          "description": "安全性良好，仅有轻微安全隐患"
-        },
-        {
-          "score": 70,
-          "description": "存在中等安全隐患，建议修复"
-        },
-        {
-          "score": 50,
-          "description": "存在明显安全漏洞，需要修复"
-        },
-        {
-          "score": 0,
-          "description": "存在严重安全漏洞，高风险"
-        }
-      ],
-      "threshold": 70
+      "sqlInjection": {
+        "action": "block",
+        "severity": "critical"
+      },
+      "xss": {
+        "action": "block",
+        "severity": "critical"
+      },
+      "rce": {
+        "action": "block",
+        "severity": "critical"
+      },
+      "pathTraversal": {
+        "action": "block",
+        "severity": "high"
+      },
+      "ssrf": {
+        "action": "block",
+        "severity": "high"
+      }
     },
-    "code_quality": {
-      "name": "代码质量",
-      "description": "评估代码的可读性、可维护性、风格一致性",
-      "weight": 0.2,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "代码优雅，命名规范，注释清晰，结构良好"
-        },
-        {
-          "score": 85,
-          "description": "代码质量良好，可读性强"
-        },
-        {
-          "score": 70,
-          "description": "代码质量一般，存在少量可改进之处"
-        },
-        {
-          "score": 50,
-          "description": "代码质量较差，命名混乱，缺乏注释"
-        },
-        {
-          "score": 0,
-          "description": "代码完全不可读，难以维护"
-        }
-      ],
-      "threshold": 65
+    "codeQuality": {
+      "syntaxCheck": true,
+      "styleGuide": "standard",
+      "complexityLimit": 20,
+      "functionLengthLimit": 50
+    }
+  },
+  "languages": {
+    "javascript": {
+      "maxFileSize": 10000,
+      "allowRequire": true,
+      "allowNodeAPIs": ["fs.readFile", "path.join"]
     },
-    "performance": {
-      "name": "性能",
-      "description": "评估代码的执行效率、算法复杂度、资源使用",
-      "weight": 0.15,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "性能最优，算法复杂度低，资源使用合理"
-        },
-        {
-          "score": 85,
-          "description": "性能良好，执行效率高"
-        },
-        {
-          "score": 70,
-          "description": "性能一般，存在优化空间"
-        },
-        {
-          "score": 50,
-          "description": "性能较差，有明显效率问题"
-        },
-        {
-          "score": 0,
-          "description": "性能极差，无法接受"
-        }
-      ],
-      "threshold": 60
+    "python": {
+      "maxFileSize": 15000,
+      "allowImport": ["os", "sys", "json", "re"],
+      "banImport": ["ctypes", "subprocess", "socket"]
     },
-    "testability": {
-      "name": "可测试性",
-      "description": "评估代码是否易于测试，单元测试覆盖率",
-      "weight": 0.1,
-      "criteria": [
-        {
-          "score": 100,
-          "description": "完全可测试，测试覆盖率>90%"
-        },
-        {
-          "score": 80,
-          "description": "易于测试，覆盖率>70%"
-        },
-        {
-          "score": 60,
-          "description": "基本可测试，覆盖率>50%"
-        },
-        {
-          "score": 40,
-          "description": "测试困难，覆盖率<50%"
-        },
-        {
-          "score": 0,
-          "description": "几乎无法测试"
-        }
-      ],
-      "threshold": 60
+    "java": {
+      "maxFileSize": 20000,
+      "allowSystem": false
+    }
+  },
+  "presets": {
+    "secure": {
+      "securityLevel": "strict",
+      "maxFileSize": 5000,
+      "allowExternal": false
+    },
+    "balanced": {
+      "securityLevel": "moderate",
+      "maxFileSize": 15000,
+      "allowExternal": true
+    },
+    "permissive": {
+      "securityLevel": "basic",
+      "maxFileSize": 50000,
+      "allowExternal": true
     }
   }
 }
