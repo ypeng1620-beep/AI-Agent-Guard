@@ -185,7 +185,7 @@ class EvalEngine {
    * 评估 - 智能路由
    */
   async evaluate(input) {
-    const { task, output, rules } = input;
+    const { task, output, rules, selectedModel } = input;
 
     if (!task || typeof task !== 'string') {
       throw new EvalEngineError('INVALID_INPUT', 'task 参数无效');
@@ -194,24 +194,27 @@ class EvalEngine {
       throw new EvalEngineError('INVALID_INPUT', 'output 参数无效');
     }
 
+    // 优先使用传入的模型，否则使用配置的默认模型
+    const effectiveModel = selectedModel || this.selectedModel;
+    
     const prompt = this.buildPrompt(task, output, rules);
     const errors = [];
 
     // 优先尝试用户选择的模型
-    if (this.selectedModel && this.selectedModel !== 'auto') {
+    if (effectiveModel && effectiveModel !== 'auto') {
       try {
-        console.log(`[EvalEngine] 使用用户选择: ${this.selectedModel}`);
-        const result = await this.callModel(this.selectedModel, prompt);
+        console.log(`[EvalEngine] 使用用户选择: ${effectiveModel}`);
+        const result = await this.callModel(effectiveModel, prompt);
         return this.parseResult(result, rules);
       } catch (err) {
-        console.log(`[EvalEngine] ${this.selectedModel} 失败:`, err.message);
-        errors.push({ model: this.selectedModel, error: err.message });
+        console.log(`[EvalEngine] ${effectiveModel} 失败:`, err.message);
+        errors.push({ model: effectiveModel, error: err.message });
       }
     }
 
     // 遍历优先级链
     for (const modelId of this.priorityChain) {
-      if (modelId === this.selectedModel) continue; // 已尝试过
+      if (modelId === effectiveModel) continue; // 已尝试过
       
       try {
         console.log(`[EvalEngine] 尝试: ${MODEL_CONFIGS[modelId]?.name || modelId}`);

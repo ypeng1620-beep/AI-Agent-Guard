@@ -70,7 +70,7 @@ const routes = {
   'POST /evaluate': async (req, res) => {
     try {
       const body = await parseBody(req);
-      const { output, task } = body;
+      const { output, task, model } = body;
       
       if (!output) {
         return jsonResponse(res, 400, { error: 'output is required' });
@@ -79,7 +79,9 @@ const routes = {
       const cleanOutput = sanitizeInput(output);
       const cleanTask = sanitizeInput(task || '', 5000);
       
-      const result = await guard.evaluate(cleanOutput, cleanTask);
+      // 传递model参数给评估引擎
+      const context = model ? { selectedModel: model } : {};
+      const result = await guard.evaluate(cleanOutput, cleanTask, context);
       
       jsonResponse(res, 200, {
         success: true,
