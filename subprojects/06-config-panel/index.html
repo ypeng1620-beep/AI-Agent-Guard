@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agent Guard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="toast-container" id="toastContainer"></div>
+  
+  <div class="app">
+    <!-- 侧边栏：页面路由控制 -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🛡</div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-page="dashboard" title="概览">
+          <span class="icon">⬡</span>
+          <span class="label">概览</span>
+        </div>
+        <div class="nav-item" data-page="evaluate" title="评估引擎">
+          <span class="icon">◈</span>
+          <span class="label">评估</span>
+        </div>
+        <div class="nav-item" data-page="constraint" title="约束规则">
+          <span class="icon">◇</span>
+          <span class="label">约束</span>
+        </div>
+        <div class="nav-item" data-page="history" title="操作历史">
+          <span class="icon">▤</span>
+          <span class="label">历史</span>
+        </div>
+        <div class="nav-item" data-page="config" title="系统配置">
+          <span class="icon">⚙</span>
+          <span class="label">配置</span>
+        </div>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="nav-item" id="sidebarToggle" title="折叠">
+          <span class="icon">◀</span>
+        </div>
+      </div>
+    </aside>
+    
+    <!-- 主容器 -->
+    <div class="main-container">
+      <!-- 顶部状态栏 -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="page-title" id="pageTitle">系统概览</h1>
+        </div>
+        
+        <div class="topbar-center">
+          <!-- 快捷页签 -->
+          <div class="tab-nav" id="tabNav">
+            <button class="tab-btn active" data-page="dashboard">概览</button>
+            <button class="tab-btn" data-page="evaluate">评估</button>
+            <button class="tab-btn" data-page="constraint">约束</button>
+            <button class="tab-btn" data-page="history">历史</button>
+          </div>
+        </div>
+        
+        <div class="topbar-right">
+          <!-- 语言切换 -->
+          <button class="btn btn-small" id="langToggle" onclick="toggleLanguage()">EN</button>
+          
+          <!-- 明暗切换 -->
+          <button class="btn btn-small" id="themeToggle" onclick="toggleTheme()">☀</button>
+          
+          <div class="permission-toggle">
+            <button class="role-btn active" data-role="admin">ADMIN</button>
+            <button class="role-btn" data-role="user">USER</button>
+          </div>
+          
+          <div class="status-indicator">
+            <span class="status-dot offline" id="statusDot"></span>
+            <span id="statusText">离线</span>
+          </div>
+        </div>
+      </header>
+      
+      <!-- 主内容区（分页切换） -->
+      <main class="main-content" id="mainContent">
+        
+        <!-- ========== 页面1：概览仪表盘 ========== -->
+        <div class="page active" id="page-dashboard">
+          <div class="page-grid">
+            <!-- 系统状态卡片 -->
+            <div class="card card-span-2">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">◈</span> 系统状态</div>
+              </div>
+              <div class="card-body">
+                <div class="status-grid">
+                  <div class="status-item">
+                    <span class="status-label">评估引擎</span>
+                    <span class="status-value online" id="sysEvalStatus">就绪</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="status-label">约束引擎</span>
+                    <span class="status-value online">运行中</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="status-label">收敛检测</span>
+                    <span class="status-value online">监控中</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="status-label">记忆模块</span>
+                    <span class="status-value online">正常</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 快捷操作 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">⚡</span> 快捷操作</div>
+              </div>
+              <div class="card-body">
+                <div class="quick-actions">
+                  <button class="btn btn-primary" onclick="switchPage('evaluate')">开始评估</button>
+                  <button class="btn" onclick="switchPage('constraint')">查看约束</button>
+                  <button class="btn" onclick="switchPage('history')">历史记录</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 评估概览 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">📊</span> 今日评估</div>
+              </div>
+              <div class="card-body">
+                <div class="stat-display">
+                  <div class="stat-value">--</div>
+                  <div class="stat-label">评估次数</div>
+                </div>
+                <div class="stat-row">
+                  <div class="stat-mini">
+                    <span class="num">--</span>
+                    <span class="txt">通过</span>
+                  </div>
+                  <div class="stat-mini">
+                    <span class="num">--</span>
+                    <span class="txt">拦截</span>
+                  </div>
+                  <div class="stat-mini">
+                    <span class="num">--</span>
+                    <span class="txt">收敛</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 最近活动 -->
+            <div class="card card-span-2">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">▤</span> 最近活动</div>
+              </div>
+              <div class="card-body">
+                <div class="activity-list" id="activityList">
+                  <div class="empty-state">暂无活动记录</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ========== 页面2：评估引擎 ========== -->
+        <div class="page" id="page-evaluate">
+          <div class="page-grid">
+            <!-- 评估配置 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">◈</span> 评估配置</div>
+                <span class="card-badge">核心</span>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">评估模式</label>
+                  <select class="form-select" id="evalModel">
+                    <option value="local">LOCAL 本地评估器</option>
+                    <option value="doubao">DOUBAO 豆包浏览器</option>
+                    <option value="zhipu">ZHIPU 智谱GLM</option>
+                    <option value="kimi">KIMI Kimi</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">默认场景</label>
+                  <select class="form-select" id="defaultScenario">
+                    <option value="general">GENERAL 通用场景</option>
+                    <option value="tts">TTS 语音合成</option>
+                    <option value="code">CODE 代码编写</option>
+                  </select>
+                </div>
+                
+                <div class="preview-box">
+                  <div class="preview-label">当前状态</div>
+                  <div class="preview-item">
+                    <span class="preview-tag" id="modelTag">LOCAL</span>
+                    <span id="modelDesc">无需网络 快速响应</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 收敛参数 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">▣</span> 收敛参数</div>
+              </div>
+              <div class="card-body">
+                <div class="slider-group">
+                  <div class="slider-header">
+                    <span class="slider-label">分数阈值</span>
+                    <span class="slider-value" id="scoreThresholdDisplay">3%</span>
+                  </div>
+                  <input type="range" class="slider" id="scoreThreshold" min="1" max="10" value="3" step="0.5">
+                  <div class="slider-range"><span>1%</span><span>10%</span></div>
+                </div>
+                
+                <div class="slider-group">
+                  <div class="slider-header">
+                    <span class="slider-label">相似度阈值</span>
+                    <span class="slider-value" id="similarityThresholdDisplay">92%</span>
+                  </div>
+                  <input type="range" class="slider" id="similarityThreshold" min="50" max="100" value="92">
+                  <div class="slider-range"><span>50%</span><span>100%</span></div>
+                </div>
+                
+                <div class="slider-group">
+                  <div class="slider-header">
+                    <span class="slider-label">连续轮次</span>
+                    <span class="slider-value" id="consecutiveRoundsDisplay">3</span>
+                  </div>
+                  <input type="range" class="slider" id="consecutiveRounds" min="2" max="10" value="3">
+                  <div class="slider-range"><span>2轮</span><span>10轮</span></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 语义增强 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">🔍</span> 相似度工具</div>
+              </div>
+              <div class="card-body">
+                <div class="toggle">
+                  <span class="toggle-label">语义增强层</span>
+                  <div class="toggle-switch active" id="semanticToggle" onclick="toggleSwitch(this)"></div>
+                </div>
+                
+                <div class="preview-box">
+                  <div class="preview-label">说明</div>
+                  <p style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">
+                    启用后使用语义相似度算法提升检测精度，支持调用大模型进行二次判定。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ========== 页面3：约束规则 ========== -->
+        <div class="page" id="page-constraint">
+          <div class="page-grid">
+            <!-- 违禁词管理 -->
+            <div class="card card-span-2">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">◇</span> 违禁词管理</div>
+                <span class="card-badge">核心</span>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">违禁词列表 <span class="form-hint">(每行一个)</span></label>
+                  <textarea class="form-textarea" id="forbiddenWords" rows="8" placeholder="输入违禁词，每行一个"></textarea>
+                </div>
+                
+                <div class="error-box hidden" id="constraintsError">
+                  <div class="error-title">配置错误</div>
+                  <div class="error-message" id="constraintsErrorMsg"></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 约束参数 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">▣</span> 输出限制</div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">最大输出长度</label>
+                  <input type="number" class="form-input" id="maxLength" value="5000" min="100" max="100000">
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">最大对话轮次</label>
+                  <input type="number" class="form-input" id="maxTurns" value="10" min="1" max="100">
+                </div>
+              </div>
+            </div>
+            
+            <!-- 规则预览 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">◉</span> 规则预览</div>
+              </div>
+              <div class="card-body">
+                <div class="preview-box">
+                  <div class="preview-item">
+                    <span>违禁词</span>
+                    <span class="preview-tag" id="previewForbidden">0个</span>
+                  </div>
+                  <div class="preview-item">
+                    <span>最大长度</span>
+                    <span class="preview-tag" id="previewLength">5000</span>
+                  </div>
+                  <div class="preview-item">
+                    <span>最大轮次</span>
+                    <span class="preview-tag" id="previewTurns">10</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ========== 页面4：历史记录 ========== -->
+        <div class="page" id="page-history">
+          <div class="page-grid page-grid-single">
+            <!-- 历史记录列表 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">▤</span> 操作历史</div>
+                <div class="card-actions">
+                  <button class="btn btn-small" onclick="undo()" id="undoBtn" disabled>↩ 撤销</button>
+                  <button class="btn btn-small" onclick="redo()" id="redoBtn" disabled>↪ 重做</button>
+                  <button class="btn btn-small" onclick="clearHistory()">清空</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="history-list" id="historyList">
+                  <div class="empty-state">暂无操作记录</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ========== 页面5：系统配置 ========== -->
+        <div class="page" id="page-config">
+          <div class="page-grid">
+            <!-- 导入导出 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">⇄</span> 配置管理</div>
+              </div>
+              <div class="card-body">
+                <div class="import-export">
+                  <button class="btn btn-primary" onclick="exportConfig()">导出配置</button>
+                  <button class="btn" onclick="document.getElementById('importFile').click()">导入配置</button>
+                  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importConfig(event)">
+                </div>
+                
+                <div class="error-box hidden" id="importError">
+                  <div class="error-title">导入失败</div>
+                  <div class="error-message" id="importErrorMsg"></div>
+                  <div class="error-suggestion" id="importErrorSuggest"></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 保存操作 -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span class="icon">💾</span> 保存配置</div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <button class="btn btn-primary" style="width: 100%;" onclick="saveConfig()" id="saveBtn">
+                    保存所有配置
+                  </button>
+                </div>
+                <div class="form-group">
+                  <button class="btn" style="width: 100%;" onclick="resetConfig()">
+                    重置为默认
+                  </button>
+                </div>
+                <div class="preview-box">
+                  <div class="preview-label">保存状态</div>
+                  <span id="saveStatus" style="font-size: 11px; color: var(--text-muted);">等待保存...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </main>
+      
+      <!-- 底部状态栏 -->
+      <footer class="bottombar">
+        <div class="bottombar-left">
+          <span class="log-indicator">
+            <span class="dot"></span>
+            <span>系统就绪</span>
+          </span>
+        </div>
+        <div class="bottombar-right">
+          <span id="currentTime">--:--:--</span>
+        </div>
+      </footer>
+    </div>
+  </div>
+  
+  <script src="js/api.js"></script>
+  <script src="js/config-manager.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

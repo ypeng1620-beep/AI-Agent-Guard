@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AI Agent Guard Rules Schema",
+  "description": "多维度评分规则库标准格式",
+  "version": "1.0",
+  "type": "object",
+  "scenes": ["general", "tts", "code"],
+  "required": ["version", "scenes", "dimensions"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "规则库版本号"
+    },
+    "name": {
+      "type": "string",
+      "description": "场景名称"
+    },
+    "description": {
+      "type": "string",
+      "description": "场景描述"
+    },
+    "scenes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "enum": ["general", "tts", "code"]
+    },
+    "dimensions": {
+      "type": "object",
+      "description": "维度定义",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "weight", "criteria", "threshold"],
+        "properties": {
+          "name": { "type": "string" },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "权重，0-1之间"
+          },
+          "criteria": {
+            "type": "array",
+            "description": "打分标准",
+            "items": {
+              "type": "object",
+              "required": ["score", "description"],
+              "properties": {
+                "score": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "description": { "type": "string" }
+              }
+            }
+          },
+          "threshold": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "判定阈值"
+          }
+        }
+      }
+    }
+  }
+}

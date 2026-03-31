@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 评估引擎 - 模型选择器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background: linear-gradient(180deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+
+    /* 地区选择 */
+    .region-selector {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .region-btn {
+      flex: 1;
+      padding: 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .region-btn:hover {
+      border-color: #667eea;
+      background: #f8f6ff;
+    }
+
+    .region-btn.active {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .region-btn .icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .region-btn .label {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .region-btn .desc {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+
+    /* 模型列表 */
+    .model-section {
+      margin-bottom: 24px;
+    }
+
+    .model-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .model-card {
+      padding: 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .model-card:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .model-card.selected {
+      border-color: #667eea;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    }
+
+    .model-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .model-card.browser::before {
+      content: '🌐';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 14px;
+      opacity: 0.5;
+    }
+
+    .model-card.api::before {
+      content: '🔑';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 14px;
+      opacity: 0.5;
+    }
+
+    .model-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .model-desc {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .model-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .model-badge.free {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .model-badge.api {
+      background: #fff3e0;
+      color: #ef6c00;
+    }
+
+    /* 优先级说明 */
+    .priority-info {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .priority-info h4 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .priority-chain {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .priority-item {
+      padding: 4px 10px;
+      background: white;
+      border-radius: 16px;
+      font-size: 12px;
+      color: #666;
+      border: 1px solid #e0e0e0;
+    }
+
+    .priority-item:first-child {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      font-weight: 600;
+    }
+
+    .priority-arrow {
+      color: #999;
+      font-size: 12px;
+    }
+
+    /* 测试区域 */
+    .test-area {
+      margin-top: 20px;
+    }
+
+    .test-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 80px;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+
+    .test-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .test-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .test-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .test-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .test-result {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .test-result.show {
+      display: block;
+    }
+
+    .test-result h4 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    .score-display {
+      font-size: 48px;
+      font-weight: bold;
+      text-align: center;
+      color: #667eea;
+    }
+
+    .score-status {
+      text-align: center;
+      padding: 8px 16px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-top: 8px;
+    }
+
+    .score-status.pass {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .score-status.fail {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .dimension-list {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .dimension-item {
+      padding: 8px 12px;
+      background: white;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .dimension-name {
+      color: #666;
+    }
+
+    .dimension-score {
+      font-weight: 600;
+      color: #333;
+    }
+
+    /* 保存提示 */
+    .save-notice {
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    /* 响应式 */
+    @media (max-width: 600px) {
+      .model-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .dimension-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 AI 评估引擎</h1>
+    <p class="subtitle">选择模型 → 测试评估 → 保存配置</p>
+
+    <!-- 地区选择 -->
+    <div class="card">
+      <div class="card-title">选择地区</div>
+      <div class="region-selector">
+        <div class="region-btn active" data-region="cn" onclick="selectRegion('cn')">
+          <div class="icon">🇨🇳</div>
+          <div class="label">国内用户</div>
+          <div class="desc">优先国产大模型</div>
+        </div>
+        <div class="region-btn" data-region="overseas" onclick="selectRegion('overseas')">
+          <div class="icon">🌍</div>
+          <div class="label">海外用户</div>
+          <div class="desc">优先 Gemini/Mistral</div>
+        </div>
+      </div>
+
+      <!-- 优先级链 -->
+      <div class="priority-info">
+        <h4>当前优先级链</h4>
+        <div class="priority-chain" id="priorityChain"></div>
+      </div>
+    </div>
+
+    <!-- 模型选择 -->
+    <div class="card">
+      <div class="card-title">选择模型</div>
+      
+      <div class="model-section">
+        <div class="model-section-title">🌐 免费网页版（推荐）</div>
+        <div class="model-grid" id="freeModels"></div>
+      </div>
+
+      <div class="model-section">
+        <div class="model-section-title">🔑 API 兜底</div>
+        <div class="model-grid" id="apiModels"></div>
+      </div>
+    </div>
+
+    <!-- 测试区域 -->
+    <div class="card">
+      <div class="card-title">测试评估</div>
+      <div class="test-area">
+        <textarea class="test-input" id="testOutput" placeholder="输入要评估的 Agent 输出内容..."></textarea>
+        <button class="test-btn" id="testBtn" onclick="runTest()">
+          🚀 开始测试
+        </button>
+        <div class="test-result" id="testResult"></div>
+      </div>
+    </div>
+
+    <p class="save-notice">
+      💡 配置会自动保存到 localStorage，下次打开自动加载
+    </p>
+  </div>
+
+  <script>
+    // 模型配置
+    const MODEL_CONFIGS = {
+      // 国内
+      doubao: { name: '字节豆包', url: 'https://www.doubao.com/', type: 'browser', region: 'cn', priority: 1 },
+      zhipu: { name: '智谱 GLM-4', url: 'https://chatglm.cn/', type: 'browser', region: 'cn', priority: 2 },
+      kimi: { name: 'Kimi', url: 'https://kimi.moonshot.cn/', type: 'browser', region: 'cn', priority: 3 },
+      minimax: { name: 'MiniMax 2.7', url: 'https://minimax.chat/', type: 'browser', region: 'cn', priority: 4 },
+      qianwen: { name: '通义千问', url: 'https://qianwen.aliyun.com/', type: 'browser', region: 'cn', priority: 5 },
+      // 海外
+      gemini: { name: 'Google Gemini', url: 'https://gemini.google.com/', type: 'browser', region: 'overseas', priority: 1 },
+      mistral: { name: 'Mistral', url: 'https://mistral.ai/chat/', type: 'browser', region: 'overseas', priority: 2 },
+      groq: { name: 'Groq (Llama)', url: 'https://console.groq.com/', type: 'browser', region: 'overseas', priority: 3 },
+      poe: { name: 'Poe 聚合', url: 'https://poe.com/', type: 'browser', region: 'overseas', priority: 4 },
+      // API
+      claude_api: { name: 'Claude API', url: 'API', type: 'api', region: 'global', priority: 99 },
+      gpt4_api: { name: 'GPT-4 API', url: 'API', type: 'api', region: 'global', priority: 99 },
+      openrouter: { name: 'OpenRouter', url: 'API', type: 'api', region: 'global', priority: 98 }
+    };
+
+    const PRIORITY_CHAINS = {
+      cn: ['doubao', 'zhipu', 'kimi', 'minimax', 'qianwen', 'groq', 'mistral', 'openrouter', 'claude_api', 'gpt4_api'],
+      overseas: ['gemini', 'mistral', 'groq', 'poe', 'doubao', 'zhipu', 'openrouter', 'claude_api', 'gpt4_api']
+    };
+
+    let currentRegion = localStorage.getItem('eval_region') || 'cn';
+    let selectedModel = localStorage.getItem('eval_model') || 'auto';
+
+    // 初始化
+    function init() {
+      selectRegion(currentRegion);
+      renderModels();
+    }
+
+    // 选择地区
+    function selectRegion(region) {
+      currentRegion = region;
+      localStorage.setItem('eval_region', region);
+      
+      document.querySelectorAll('.region-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.region === region);
+      });
+
+      renderModels();
+      renderPriorityChain();
+    }
+
+    // 渲染优先级链
+    function renderPriorityChain() {
+      const chain = PRIORITY_CHAINS[currentRegion];
+      const container = document.getElementById('priorityChain');
+      
+      container.innerHTML = chain.slice(0, 6).map((id, i) => {
+        const model = MODEL_CONFIGS[id];
+        const name = model ? model.name : id;
+        return `<span class="priority-item">${name}</span>${i < 5 ? '<span class="priority-arrow">→</span>' : ''}`;
+      }).join('') + (chain.length > 6 ? '<span class="priority-item">...</span>' : '');
+    }
+
+    // 渲染模型列表
+    function renderModels() {
+      const freeContainer = document.getElementById('freeModels');
+      const apiContainer = document.getElementById('apiModels');
+      
+      const chain = PRIORITY_CHAINS[currentRegion];
+      const freeModels = chain.filter(id => MODEL_CONFIGS[id]?.type === 'browser').slice(0, 6);
+      const apiModels = ['openrouter', 'claude_api', 'gpt4_api'];
+
+      freeContainer.innerHTML = freeModels.map(id => {
+        const model = MODEL_CONFIGS[id];
+        return `
+          <div class="model-card browser ${selectedModel === id ? 'selected' : ''}" 
+               onclick="selectModel('${id}')">
+            <div class="model-name">${model.name}</div>
+            <div class="model-desc">优先级 ${model.priority}</div>
+            <span class="model-badge free">免费</span>
+          </div>
+        `;
+      }).join('');
+
+      apiContainer.innerHTML = apiModels.map(id => {
+        const model = MODEL_CONFIGS[id];
+        if (!model) return '';
+        return `
+          <div class="model-card api ${selectedModel === id ? 'selected' : ''}" 
+               onclick="selectModel('${id}')">
+            <div class="model-name">${model.name}</div>
+            <div class="model-desc">需要 API Key</div>
+            <span class="model-badge api">API</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 选择模型
+    function selectModel(modelId) {
+      selectedModel = modelId;
+      localStorage.setItem('eval_model', modelId);
+      renderModels();
+    }
+
+    // 运行测试
+    async function runTest() {
+      const output = document.getElementById('testOutput').value.trim();
+      const btn = document.getElementById('testBtn');
+      const resultDiv = document.getElementById('testResult');
+
+      if (!output) {
+        alert('请输入要评估的内容');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ 评估中...';
+      resultDiv.classList.remove('show');
+
+      try {
+        const engine = new EvalEngine({
+          region: currentRegion,
+          selectedModel: selectedModel
+        });
+
+        const result = await engine.evaluate({
+          task: '通用文本质量评估',
+          output: output,
+          rules: {}
+        });
+
+        resultDiv.innerHTML = `
+          <h4>评估结果</h4>
+          <div style="text-align:center">
+            <div class="score-display">${result.score}</div>
+            <span class="score-status ${result.passed ? 'pass' : 'fail'}">
+              ${result.passed ? '✓ 通过' : '✗ 未通过'}
+            </span>
+          </div>
+          <div class="dimension-list">
+            <div class="dimension-item">
+              <span class="dimension-name">合规性</span>
+              <span class="dimension-score">${result.dimensions.compliance}</span>
+            </div>
+            <div class="dimension-item">
+              <span class="dimension-name">质量</span>
+              <span class="dimension-score">${result.dimensions.quality}</span>
+            </div>
+            <div class="dimension-item">
+              <span class="dimension-name">效率</span>
+              <span class="dimension-score">${result.dimensions.efficiency}</span>
+            </div>
+            <div class="dimension-item">
+              <span class="dimension-name">约束</span>
+              <span class="dimension-score">${result.dimensions.constraint}</span>
+            </div>
+          </div>
+          <p style="margin-top:12px;font-size:12px;color:#666;">${result.reasoning}</p>
+        `;
+        resultDiv.classList.add('show');
+
+      } catch (err) {
+        resultDiv.innerHTML = `
+          <h4>评估失败</h4>
+          <p style="color:#c62828;font-size:14px;">${err.message}</p>
+        `;
+        resultDiv.classList.add('show');
+      }
+
+      btn.disabled = false;
+      btn.textContent = '🚀 开始测试';
+    }
+
+    // 初始化
+    init();
+  </script>
+</body>
+</html>

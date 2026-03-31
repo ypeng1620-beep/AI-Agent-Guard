@@ -1,0 +1,16 @@
+{
+  "name": "04-similarity-tool",
+  "version": "1.0.0",
+  "description": "基于 TF-IDF + 余弦相似度算法的文本相似度计算工具，支持普通文本和 TTS 脚本场景。",
+  "main": "similarity.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "pinyin": "^4.0.0"
+  }
+}

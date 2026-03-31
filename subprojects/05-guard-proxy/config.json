@@ -1,0 +1,20 @@
+{
+  "port": 18790,
+  "openclawUrl": "http://127.0.0.1:18789",
+  "maxRetries": 3,
+  "fuseThreshold": 3,
+  "enableFuse": true,
+  "rules": {
+    "prohibitedWords": [
+      "违禁词1",
+      "违禁词2",
+      "请替换为实际的违禁词列表"
+    ],
+    "maxLength": 50000,
+    "minLength": 1,
+    "requiredFormat": null,
+    "maxRounds": 50,
+    "maxRedundancyScore": 0.7
+  },
+  "blockerLogPath": null
+}

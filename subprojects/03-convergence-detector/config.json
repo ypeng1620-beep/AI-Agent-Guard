@@ -1,0 +1,28 @@
+{
+  "name": "convergence-detector",
+  "version": "1.0.0",
+  "description": "收敛检测核心脚本 - 监控Agent多轮循环，判断是否收敛",
+  
+  "scoreThreshold": 3,
+  "similarityThreshold": 92,
+  "consecutiveRounds": 3,
+  "maxHistorySize": 20,
+  
+  "convergenceConditions": {
+    "scoreStability": {
+      "description": "连续N轮第三方评估分数波动≤阈值",
+      "enabled": true
+    },
+    "textSimilarity": {
+      "description": "连续2轮输出内容相似度≥阈值",
+      "enabled": true
+    },
+    "noContentChange": {
+      "description": "单轮循环无实质内容修改",
+      "enabled": true
+    }
+  },
+  
+  "mode": "passive",
+  "note": "当前为被动模式(事后分析)，未来可扩展为主动模式(实时监控)"
+}

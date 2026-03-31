@@ -1,0 +1,14 @@
+{
+  "name": "ai-agent-guard-integrator",
+  "version": "1.0.0",
+  "description": "AI Agent Guard - 模块集成器",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js",
+    "start": "node index.js"
+  },
+  "keywords": ["ai-agent", "guard", "eval", "constraint"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}
