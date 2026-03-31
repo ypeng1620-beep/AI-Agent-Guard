@@ -122,6 +122,36 @@ async function runBenchmark() {
   console.log(`  RSS: ${(memUsage.rss / 1024 / 1024).toFixed(2)} MB`);
   
   console.log('\n✅ 基准测试完成\n');
+
+  // 输出CI友好的JSON格式
+  const ciOutput = {
+    timestamp: new Date().toISOString(),
+    iterations: ITERATIONS,
+    results: results.map(r => ({
+      name: r.name,
+      totalMs: parseFloat(r.duration.toFixed(2)),
+      avgMs: parseFloat(r.avg.toFixed(4))
+    })),
+    performance: {
+      constraintCheckAvgMs: parseFloat(results[0].avg.toFixed(4)),
+      similarityAvgMs: parseFloat(results[1].avg.toFixed(4)),
+      convergenceAvgMs: parseFloat(results[2].avg.toFixed(4)),
+      ruleReloadAvgMs: parseFloat(results[3].avg.toFixed(4)),
+      evalAvgMs: parseFloat(results[4].avg.toFixed(4))
+    },
+    memory: {
+      heapUsedMb: parseFloat((memUsage.heapUsed / 1024 / 1024).toFixed(2)),
+      heapTotalMb: parseFloat((memUsage.heapTotal / 1024 / 1024).toFixed(2)),
+      rssMb: parseFloat((memUsage.rss / 1024 / 1024).toFixed(2))
+    }
+  };
+
+  // 如果需要CI输出，设置环境变量 BENCHMARK_CI=1
+  if (process.env.BENCHMARK_CI === '1') {
+    console.log('\n--- CI OUTPUT ---');
+    console.log(JSON.stringify(ciOutput, null, 2));
+    console.log('--- END CI OUTPUT ---\n');
+  }
 }
 
 runBenchmark().catch(console.error);

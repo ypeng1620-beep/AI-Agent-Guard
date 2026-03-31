@@ -1,0 +1,57 @@
+{
+  "name": "ai-agent-guard",
+  "version": "2.3.0",
+  "description": "AI Agent Guard - AI Agent 安全防护解决方案",
+  "main": "integrator/index.js",
+  "bin": {
+    "agent-guard": "api-server.js",
+    "agent-guard-auth": "auth-server.js"
+  },
+  "scripts": {
+    "start": "node api-server.js",
+    "start:auth": "node auth-server.js",
+    "test": "node tests/unit.test.js && node tests/security.test.js && node tests/full-integration.test.js",
+    "test:unit": "node tests/unit.test.js",
+    "test:security": "node tests/security.test.js",
+    "test:integration": "node tests/full-integration.test.js",
+    "benchmark": "node benchmark.js"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "guard",
+    "security",
+    "eval",
+    "constraint",
+    "convergence",
+    "similarity",
+    "filter",
+    "safety"
+  ],
+  "author": "ypeng1620",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ypeng1620-beep/AI-Agent-Guard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ypeng1620-beep/AI-Agent-Guard/issues"
+  },
+  "homepage": "https://github.com/ypeng1620-beep/AI-Agent-Guard#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "files": [
+    "integrator/",
+    "subprojects/",
+    "api-server.js",
+    "auth-server.js",
+    "benchmark.js",
+    "openapi.yaml",
+    "README.md",
+    "README_zh.md",
+    "LICENSE"
+  ]
+}
