@@ -1,67 +1,92 @@
 {
-  "scenario": "code",
   "version": "2.0.0",
+  "name": "code",
   "description": "代码助手场景规则库",
-  "rules": {
-    "forbiddenWords": {
-      "core": [
-        "eval", "exec", "system", "popen", "subprocess",
-        "__import__", "open(", "file", "os.", "sys.",
-        "spawn", "fork", "ctypes", "socket"
-      ],
-      "extended": [
-        "shell", "bash", "sh", "cmd", "powershell",
-        "rm -rf", "del /", "format", "wipe",
-        "drop table", "delete from", "truncate",
-        "inject", "bypass", "rootkit"
-      ],
-      "contextual": [
-        "password", "secret", "token", "api_key", "credential",
-        "decrypt", "crack", "hack", "exploit"
+  "scenes": ["code"],
+  
+  "dimensions": {
+    "quality": {
+      "name": "代码质量",
+      "weight": 0.35,
+      "threshold": 70,
+      "criteria": [
+        { "score": 95, "description": "代码规范、可读性强" },
+        { "score": 80, "description": "代码较规范" },
+        { "score": 65, "description": "代码基本可读" },
+        { "score": 50, "description": "代码混乱" },
+        { "score": 30, "description": "代码无法使用" }
       ]
     },
-    "length": {
-      "min": 5,
-      "max": 50000,
-      "recommended": 5000
+    "safety": {
+      "name": "安全性",
+      "weight": 0.40,
+      "threshold": 80,
+      "criteria": [
+        { "score": 100, "description": "无安全风险" },
+        { "score": 80, "description": "轻微风险" },
+        { "score": 50, "description": "存在风险" },
+        { "score": 20, "description": "严重风险" },
+        { "score": 0, "description": "危险代码" }
+      ]
     },
-    "turns": {
-      "max": 100,
-      "warning": 50
-    },
-    "quality": {
-      "minScore": 70,
-      "goodScore": 90
-    },
-    "security": {
-      "sqlInjection": {
-        "action": "block",
-        "severity": "critical"
-      },
-      "xss": {
-        "action": "block",
-        "severity": "critical"
-      },
-      "rce": {
-        "action": "block",
-        "severity": "critical"
-      },
-      "pathTraversal": {
-        "action": "block",
-        "severity": "high"
-      },
-      "ssrf": {
-        "action": "block",
-        "severity": "high"
-      }
-    },
-    "codeQuality": {
-      "syntaxCheck": true,
-      "styleGuide": "standard",
-      "complexityLimit": 20,
-      "functionLengthLimit": 50
+    "compliance": {
+      "name": "合规性",
+      "weight": 0.25,
+      "threshold": 75,
+      "criteria": [
+        { "score": 100, "description": "完全合规" },
+        { "score": 75, "description": "轻微违规" },
+        { "score": 50, "description": "部分违规" },
+        { "score": 25, "description": "严重违规" },
+        { "score": 0, "description": "完全违规" }
+      ]
     }
   },
+  
+  "forbiddenWords": {
+    "core": [
+      "eval", "exec", "system", "popen", "subprocess",
+      "__import__", "open(", "file", "os.", "sys.",
+      "spawn", "fork", "ctypes", "socket"
+    ],
+    "extended": [
+      "shell", "bash", "sh", "cmd", "powershell",
+      "rm -rf", "del /", "format", "wipe",
+      "drop table", "delete from", "truncate",
+      "inject", "bypass", "rootkit"
+    ],
+    "contextual": [
+      "password", "secret", "token", "api_key", "credential",
+      "decrypt", "crack", "hack", "exploit"
+    ]
+  },
+  
+  "length": {
+    "min": 5,
+    "max": 50000,
+    "recommended": 5000
+  },
+  
+  "turns": {
+    "max": 100,
+    "warning": 50
+  },
+  
+  "security": {
+    "sqlInjection": { "action": "block", "severity": "critical" },
+    "xss": { "action": "block", "severity": "critical" },
+    "rce": { "action": "block", "severity": "critical" },
+    "pathTraversal": { "action": "block", "severity": "high" },
+    "ssrf": { "action": "block", "severity": "high" }
+  },
+  
+  "codeQuality": {
+    "syntaxCheck": true,
+    "styleGuide": "standard",
+    "complexityLimit": 20,
+    "functionLengthLimit": 50
+  },
+  
   "languages": {
     "javascript": {
       "maxFileSize": 10000,
@@ -78,6 +103,7 @@
       "allowSystem": false
     }
   },
+  
   "presets": {
     "secure": {
       "securityLevel": "strict",

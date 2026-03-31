@@ -1,63 +1,76 @@
 {
-  "scenario": "tts",
   "version": "2.0.0",
+  "name": "tts",
   "description": "TTS语音合成场景规则库",
-  "rules": {
-    "forbiddenWords": {
-      "core": [
-        "噪音", "刺耳", "过载", "失真", "爆音"
-      ],
-      "extended": [],
-      "contextual": []
-    },
-    "length": {
-      "min": 5,
-      "max": 5000,
-      "recommended": 1000,
-      "perMinute": 150
-    },
-    "turns": {
-      "max": 10,
-      "warning": 7
-    },
+  "scenes": ["tts"],
+  
+  "dimensions": {
     "quality": {
-      "minScore": 70,
-      "goodScore": 85
-    },
-    "tts": {
-      "maxDuration": 300,
-      "maxSilence": 3,
-      "allowSSML": false,
-      "allowAudio": false,
-      "pitchRange": {
-        "min": 0.5,
-        "max": 2.0
-      },
-      "speedRange": {
-        "min": 0.5,
-        "max": 2.0
-      },
-      "volumeRange": {
-        "min": 0.1,
-        "max": 1.0
-      }
+      "name": "语音质量",
+      "weight": 0.40,
+      "threshold": 70,
+      "criteria": [
+        { "score": 95, "description": "音质清晰流畅" },
+        { "score": 80, "description": "音质较好" },
+        { "score": 65, "description": "音质一般" },
+        { "score": 50, "description": "有明显杂音" },
+        { "score": 30, "description": "严重失真" }
+      ]
     },
     "safety": {
-      "earDamage": {
-        "action": "block",
-        "severity": "critical"
-      },
-      "seizure": {
-        "action": "block",
-        "severity": "high"
-      }
+      "name": "听力安全",
+      "weight": 0.35,
+      "threshold": 75,
+      "criteria": [
+        { "score": 100, "description": "听力友好" },
+        { "score": 80, "description": "轻微不适" },
+        { "score": 50, "description": "可能不适" },
+        { "score": 20, "description": "可能造成伤害" },
+        { "score": 0, "description": "危险内容" }
+      ]
     },
-    "pronunciation": {
-      "correctness": 0.95,
-      "nativeCheck": true,
-      "phoneticAmbiguity": false
+    "compliance": {
+      "name": "合规性",
+      "weight": 0.25,
+      "threshold": 70,
+      "criteria": [
+        { "score": 100, "description": "完全合规" },
+        { "score": 75, "description": "轻微违规" },
+        { "score": 50, "description": "部分违规" },
+        { "score": 25, "description": "严重违规" },
+        { "score": 0, "description": "完全违规" }
+      ]
     }
   },
+  
+  "forbiddenWords": {
+    "core": [],
+    "extended": [],
+    "contextual": []
+  },
+  
+  "length": {
+    "min": 5,
+    "max": 5000,
+    "recommended": 1000,
+    "perMinute": 150
+  },
+  
+  "turns": {
+    "max": 10,
+    "warning": 7
+  },
+  
+  "tts": {
+    "maxDuration": 300,
+    "maxSilence": 3,
+    "allowSSML": false,
+    "allowAudio": false,
+    "pitchRange": { "min": 0.5, "max": 2.0 },
+    "speedRange": { "min": 0.5, "max": 2.0 },
+    "volumeRange": { "min": 0.1, "max": 1.0 }
+  },
+  
   "presets": {
     "news": {
       "maxDuration": 180,

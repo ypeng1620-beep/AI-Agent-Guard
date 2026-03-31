@@ -1,57 +1,75 @@
 {
-  "scenario": "general",
   "version": "2.0.0",
+  "name": "general",
   "description": "通用场景规则库",
-  "rules": {
-    "forbiddenWords": {
-      "core": [
-        "毒品", "赌博", "走私", "伪造", "恐怖", "爆炸", "武器", "核弹",
-        "自杀", "自残", "谋杀", "投毒", "绑架", "拐卖", "诈骗", "传销",
-        "色情", "淫秽", "赌博", "博彩", "外挂", "作弊", "黑产", "洗钱"
-      ],
-      "extended": [
-        "暴力", "血腥", "残忍", "虐待", "性骚扰", "未成年人", "儿童色情",
-        "网络攻击", "黑客", "入侵", "破解", "盗号", "窃取", "钓鱼",
-        "虚假信息", "谣言", "诽谤", "侮辱", "诬告", "陷害"
-      ],
-      "contextual": [
-        "敏感政治", "分裂国家", "颠覆政权", "非法集会", "抗议活动"
+  "scenes": ["general"],
+  
+  "dimensions": {
+    "quality": {
+      "name": "内容质量",
+      "weight": 0.35,
+      "threshold": 60,
+      "criteria": [
+        { "score": 95, "description": "内容完整、逻辑清晰、有深度" },
+        { "score": 80, "description": "内容完整、逻辑较清晰" },
+        { "score": 65, "description": "内容基本完整、逻辑一般" },
+        { "score": 50, "description": "内容不完整或逻辑混乱" },
+        { "score": 30, "description": "内容残缺、表述不清" }
       ]
     },
-    "length": {
-      "min": 10,
-      "max": 10000,
-      "recommended": 2000
-    },
-    "turns": {
-      "max": 50,
-      "warning": 30
-    },
-    "quality": {
-      "minScore": 60,
-      "goodScore": 80
-    },
     "safety": {
-      "profanity": {
-        "action": "block",
-        "severity": "high"
-      },
-      "hateSpeech": {
-        "action": "block", 
-        "severity": "critical"
-      },
-      "dangerousContent": {
-        "action": "block",
-        "severity": "critical"
-      }
+      "name": "安全性",
+      "weight": 0.35,
+      "threshold": 70,
+      "criteria": [
+        { "score": 100, "description": "无任何安全隐患" },
+        { "score": 80, "description": "轻微安全隐患" },
+        { "score": 50, "description": "存在安全隐患" },
+        { "score": 20, "description": "严重安全隐患" },
+        { "score": 0, "description": "危险内容" }
+      ]
     },
-    "format": {
-      "allowHTML": false,
-      "allowScript": false,
-      "allowIframe": false,
-      "allowExternalResource": false
+    "compliance": {
+      "name": "合规性",
+      "weight": 0.30,
+      "threshold": 65,
+      "criteria": [
+        { "score": 100, "description": "完全合规" },
+        { "score": 75, "description": "轻微违规" },
+        { "score": 50, "description": "部分违规" },
+        { "score": 25, "description": "严重违规" },
+        { "score": 0, "description": "完全违规" }
+      ]
     }
   },
+  
+  "forbiddenWords": {
+    "core": [
+      "毒品", "赌博", "走私", "伪造", "恐怖", "爆炸", "武器", "核弹",
+      "自杀", "自残", "谋杀", "投毒", "绑架", "拐卖", "诈骗", "传销",
+      "色情", "淫秽", "赌博", "博彩", "外挂", "作弊", "黑产", "洗钱"
+    ],
+    "extended": [
+      "暴力", "血腥", "残忍", "虐待", "性骚扰", "未成年人", "儿童色情",
+      "网络攻击", "黑客", "入侵", "破解", "盗号", "窃取", "钓鱼",
+      "虚假信息", "谣言", "诽谤", "侮辱", "诬告", "陷害"
+    ],
+    "contextual": [
+      "敏感政治", "分裂国家", "颠覆政权", "非法集会", "抗议活动"
+    ]
+  },
+  
+  "length": {
+    "min": 10,
+    "max": 10000,
+    "recommended": 2000
+  },
+  
+  "turns": {
+    "max": 50,
+    "warning": 30
+  },
+  
   "presets": {
     "strict": {
       "scoreThreshold": 80,
