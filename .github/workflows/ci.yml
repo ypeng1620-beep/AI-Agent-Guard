@@ -29,15 +29,12 @@ jobs:
           
       - name: Run unit tests
         run: node tests/unit.test.js
-        name: Unit Tests
         
       - name: Run security tests
         run: node tests/security.test.js
-        name: Security Tests
         
       - name: Run integration tests
         run: node tests/full-integration.test.js
-        name: Integration Tests
         
   performance:
     runs-on: windows-latest
@@ -65,7 +62,6 @@ jobs:
           Write-Output "```" >> $env:GITHUB_STEP_SUMMARY
           echo "$output" | Select-String -Pattern "约束检查|相似度计算|收敛检测|平均耗时|性能评级" >> $env:GITHUB_STEP_SUMMARY
           Write-Output "```" >> $env:GITHUB_STEP_SUMMARY
-        name: Performance Benchmark
         id: benchmark
 
       - name: Store benchmark results
