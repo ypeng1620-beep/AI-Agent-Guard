@@ -95,7 +95,8 @@ jobs:
         id: meta
         run: |
           SHA_SHORT=$(echo "${GITHUB_SHA}" | cut -c1-7)
-          echo "tags=ghcr.io/${GITHUB_REPOSITORY}:sha-${SHA_SHORT},ghcr.io/${GITHUB_REPOSITORY}:latest" >> $GITHUB_OUTPUT
+          REPO_LOWER=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          echo "tags=ghcr.io/${REPO_LOWER}:sha-${SHA_SHORT},ghcr.io/${REPO_LOWER}:latest" >> $GITHUB_OUTPUT
           echo "sha_short=${SHA_SHORT}" >> $GITHUB_OUTPUT
           
       - name: Build and push Docker image
@@ -133,6 +134,11 @@ jobs:
         run: npm pack
         
       - name: Publish to npm
-        run: npm publish --access public
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "ERROR: NPM_TOKEN secret is not configured. Please add an NPM_TOKEN secret to the repository settings at https://github.com/ypeng1620-beep/AI-Agent-Guard/settings/secrets/actions"
+            exit 1
+          fi
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
