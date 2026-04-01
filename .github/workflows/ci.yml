@@ -53,15 +53,15 @@ jobs:
         run: |
           cd integrator
           npm install
+          cd ../subprojects/01-eval-engine
+          npm install
           
       - name: Run performance benchmark
         run: |
-          Set-Location $env:GITHUB_WORKSPACE
-          $output = node benchmark.js 2>&1
-          echo "$output"
+          node benchmark.js 2>&1 | Tee-Object -Variable output
           Write-Output "## Performance Benchmark Results" >> $env:GITHUB_STEP_SUMMARY
           Write-Output "```" >> $env:GITHUB_STEP_SUMMARY
-          echo "$output" | Select-String -Pattern "约束检查|相似度计算|收敛检测|平均耗时|性能评级" >> $env:GITHUB_STEP_SUMMARY
+          $output | Select-String -Pattern "约束检查|相似度计算|收敛检测|平均耗时|性能评级" >> $env:GITHUB_STEP_SUMMARY
           Write-Output "```" >> $env:GITHUB_STEP_SUMMARY
         id: benchmark
 
@@ -74,7 +74,6 @@ jobs:
             run_id = $env:GITHUB_RUN_ID
           } | ConvertTo-Json
           Write-Output $results
-          # 可以在这里添加存储到 GitHub Secrets 或外部服务
 
   docker:
     runs-on: ubuntu-latest
@@ -107,7 +106,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
           
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
@@ -132,8 +131,9 @@ jobs:
       - name: Get package version
         id: version
         run: |
-          $version = (Get-Content package.json | ConvertFrom-Json).version
-          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
         
       - name: Package
         run: npm pack
