@@ -136,8 +136,8 @@ jobs:
       - name: Publish to npm
         run: |
           if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "ERROR: NPM_TOKEN secret is not configured. Please add an NPM_TOKEN secret to the repository settings at https://github.com/ypeng1620-beep/AI-Agent-Guard/settings/secrets/actions"
-            exit 1
+            echo "NPM_TOKEN not configured, skipping npm publish. To enable publishing, add an NPM_TOKEN secret at https://github.com/ypeng1620-beep/AI-Agent-Guard/settings/secrets/actions"
+            exit 0
           fi
           npm publish --access public
         env:
