@@ -57,11 +57,7 @@ jobs:
           npm install
           
       - name: Run performance benchmark
-        run: |
-          $output = node benchmark.js 2>&1
-          $output | Out-File -Encoding utf8 -FilePath $env:TEMP/benchmark_out.txt
-          $content = Get-Content $env:TEMP/benchmark_out.txt -Raw -Encoding utf8
-          "@`n## Performance Benchmark Results`n````n$content`n```" | Out-File -Encoding utf8 -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        run: node benchmark.js
         id: benchmark
 
       - name: Store benchmark results
@@ -104,7 +100,6 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          load: false
 
   npm-publish:
     runs-on: ubuntu-latest
