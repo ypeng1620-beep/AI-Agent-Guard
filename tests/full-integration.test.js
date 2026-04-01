@@ -8,7 +8,8 @@ const path = require('path');
 const fs = require('fs');
 const assert = require('assert');
 
-const INTEGRATOR_PATH = 'D:\\ai-agent-guard\\integrator';
+const PROJECT_ROOT = path.join(__dirname, '..');
+const INTEGRATOR_PATH = path.join(PROJECT_ROOT, 'integrator');
 const API_PORT = 18791;
 
 let testsPassed = 0;
@@ -97,7 +98,7 @@ describe('文件结构验证', () => {
 
   requiredFiles.forEach(file => {
     test(`文件存在: ${file}`, () => {
-      const fullPath = path.join('D:\\ai-agent-guard', file);
+      const fullPath = path.join(PROJECT_ROOT, file);
       assert.ok(fs.existsSync(fullPath), `文件 ${file} 不存在`);
     });
   });
@@ -155,7 +156,7 @@ describe('配置管理测试', () => {
   });
 
   test('.env.example应包含必要配置项', () => {
-    const envPath = path.join('D:\\ai-agent-guard', '.env.example');
+    const envPath = path.join(PROJECT_ROOT, '.env.example');
     const content = fs.readFileSync(envPath, 'utf8');
     
     const required = ['PORT', 'HOST', 'EVAL_MODEL', 'DEFAULT_SCENARIO', 'API_KEY'];
@@ -403,7 +404,7 @@ describe('API端点测试 (需要启动服务器)', async () => {
 // ========== 测试11: OpenAPI规范 ==========
 describe('OpenAPI规范验证', () => {
   test('openapi.yaml应为有效YAML', () => {
-    const yamlPath = path.join('D:\\ai-agent-guard', 'openapi.yaml');
+    const yamlPath = path.join(PROJECT_ROOT, 'openapi.yaml');
     const content = fs.readFileSync(yamlPath, 'utf8');
     
     assert.ok(content.includes('openapi:'), '应为OpenAPI规范');
@@ -414,7 +415,7 @@ describe('OpenAPI规范验证', () => {
   });
 
   test('应定义所有核心端点', () => {
-    const yamlPath = path.join('D:\\ai-agent-guard', 'openapi.yaml');
+    const yamlPath = path.join(PROJECT_ROOT, 'openapi.yaml');
     const content = fs.readFileSync(yamlPath, 'utf8');
     
     const endpoints = [
@@ -431,7 +432,7 @@ describe('OpenAPI规范验证', () => {
 // ========== 测试12: Docker配置 ==========
 describe('Docker配置验证', () => {
   test('Dockerfile应存在且有效', () => {
-    const dockerfilePath = path.join('D:\\ai-agent-guard', 'Dockerfile');
+    const dockerfilePath = path.join(PROJECT_ROOT, 'Dockerfile');
     const content = fs.readFileSync(dockerfilePath, 'utf8');
     
     assert.ok(content.includes('FROM'), '应包含基础镜像');
@@ -441,7 +442,7 @@ describe('Docker配置验证', () => {
   });
 
   test('docker-compose.yml应有效', () => {
-    const composePath = path.join('D:\\ai-agent-guard', 'docker-compose.yml');
+    const composePath = path.join(PROJECT_ROOT, 'docker-compose.yml');
     const content = fs.readFileSync(composePath, 'utf8');
     
     assert.ok(content.includes('version:'), '应有版本定义');
@@ -454,12 +455,12 @@ describe('Docker配置验证', () => {
 // ========== 测试13: 单元测试 ==========
 describe('单元测试覆盖', () => {
   test('单元测试文件应存在', () => {
-    const testPath = path.join('D:\\ai-agent-guard', 'tests', 'unit.test.js');
+    const testPath = path.join(PROJECT_ROOT, 'tests', 'unit.test.js');
     assert.ok(fs.existsSync(testPath), 'unit.test.js应存在');
   });
 
   test('安全测试文件应存在', () => {
-    const testPath = path.join('D:\\ai-agent-guard', 'tests', 'security.test.js');
+    const testPath = path.join(PROJECT_ROOT, 'tests', 'security.test.js');
     assert.ok(fs.existsSync(testPath), 'security.test.js应存在');
   });
 });
