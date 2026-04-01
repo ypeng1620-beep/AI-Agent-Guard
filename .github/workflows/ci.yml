@@ -8,9 +8,6 @@ on:
   schedule:
     - cron: '0 9 * * *'  # 每日9点运行性能测试
 
-env:
-  NODE_VERSION: '18'
-
 jobs:
   test:
     runs-on: windows-latest
@@ -21,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '18'
           
       - name: Install dependencies
         run: |
@@ -53,7 +50,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '18'
           
       - name: Install dependencies
         run: |
@@ -105,7 +102,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=sha,prefix=,suffix=,format= sha-{{ sha }}
+            type=sha,format=sha-{{ sha }}
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -131,7 +128,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '18'
           registry-url: 'https://registry.npmjs.org'
           scope: '@ai-agent-guard'
           
@@ -139,8 +136,7 @@ jobs:
         id: version
         run: |
           $version = (Get-Content package.json | ConvertFrom-Json).version
-          Write-Output "::set-output name=version::$version"
-        shell: pwsh
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
         
       - name: Package
         run: npm pack
